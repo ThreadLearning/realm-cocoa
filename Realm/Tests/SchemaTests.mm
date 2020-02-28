@@ -210,8 +210,28 @@ RLM_ARRAY_TYPE(NonDefaultObject);
 @interface MixedProperty : FakeObject
 @property id mixed;
 @end
-
 @implementation MixedProperty
+@end
+
+@interface InvalidLinkFromEmbeddedToTopLevel : FakeEmbeddedObject
+@property IntObject *link;
+@end
+@implementation InvalidLinkFromEmbeddedToTopLevel
+@end
+
+@interface InvalidArrayFromEmbeddedToTopLevel : FakeEmbeddedObject
+@property RLMArray<IntObject> *array;
+@end
+@implementation InvalidArrayFromEmbeddedToTopLevel
+@end
+
+@interface EmbeddedObjectWithPrimaryKey : FakeEmbeddedObject
+@property int pk;
+@end
+@implementation EmbeddedObjectWithPrimaryKey
++ (NSString *)primaryKey {
+    return @"pk";
+}
 @end
 
 RLM_ARRAY_TYPE(SchemaTestsLinkSource)
@@ -769,6 +789,24 @@ RLM_ARRAY_TYPE(NotARealClass)
     RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
     RLMAssertThrowsWithReasonMatching(config.objectClasses = @[[MixedProperty class]],
                                       @"Property 'mixed' is declared as 'id'.*");
+}
+
+- (void)testEmebeddedLinkingToNonEmbedded {
+    RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
+    config.objectClasses = @[[InvalidLinkFromEmbeddedToTopLevel class], [IntObject class]];
+    RLMAssertThrowsWithReason([RLMRealm realmWithConfiguration:config error:nil],
+                              @"Property 'InvalidLinkFromEmbeddedToTopLevel.link' of type 'object' cannot link to top-level object type 'IntObject'");
+    config.objectClasses = @[[InvalidArrayFromEmbeddedToTopLevel class], [IntObject class]];
+    RLMAssertThrowsWithReason([RLMRealm realmWithConfiguration:config error:nil],
+                              @"Property 'InvalidArrayFromEmbeddedToTopLevel.array' of type 'array' cannot link to top-level object type 'IntObject'");
+}
+
+- (void)testEmbeddedWithPrimaryKey {
+    RLMRealmConfiguration *config = [RLMRealmConfiguration defaultConfiguration];
+    config.objectClasses = @[[EmbeddedObjectWithPrimaryKey class]];
+    RLMAssertThrowsWithReason([RLMRealm realmWithConfiguration:config error:nil],
+                              @"Embedded object type 'EmbeddedObjectWithPrimaryKey' cannot have a primary key.");
+
 }
 
 // Can't spawn child processes on iOS

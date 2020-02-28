@@ -51,6 +51,8 @@ NS_ASSUME_NONNULL_BEGIN
  */
 @property (nonatomic, readonly, nullable) RLMProperty *primaryKeyProperty;
 
+@property (nonatomic, readonly) BOOL isEmbedded;
+
 #pragma mark - Methods
 
 /**

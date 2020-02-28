@@ -140,8 +140,8 @@ open class Object: RLMObjectBase, RealmCollectionValue {
      It is not considered part of the public API.
      :nodoc:
      */
-    public override final class func _getProperties(withInstance instance: Any) -> [RLMProperty] {
-        return ObjectUtil.getSwiftProperties(instance as! RLMObjectBase)
+    public override final class func _getProperties() -> [RLMProperty] {
+        return ObjectUtil.getSwiftProperties(self)
     }
 
     // MARK: Object Customization
@@ -245,7 +245,7 @@ open class Object: RLMObjectBase, RealmCollectionValue {
      - returns: A token which must be held for as long as you want updates to be delivered.
      */
     public func observe(_ block: @escaping (ObjectChange) -> Void) -> NotificationToken {
-        return RLMObjectAddNotificationBlock(self, { names, oldValues, newValues, error in
+        return RLMObjectBaseAddNotificationBlock(self, { names, oldValues, newValues, error in
             if let error = error {
                 block(.error(error as NSError))
                 return
@@ -611,6 +611,15 @@ extension Object: _ManagedPropertyType {
 }
 
 /// :nodoc:
+extension EmbeddedObject: _ManagedPropertyType {
+    // swiftlint:disable:next identifier_name
+    public static func _rlmProperty(_ prop: RLMProperty) {
+        Object._rlmProperty(prop)
+        prop.objectClassName = className()
+    }
+}
+
+/// :nodoc:
 extension List: _ManagedPropertyType where Element: _ManagedPropertyType {
     // swiftlint:disable:next identifier_name
     public static func _rlmProperty(_ prop: RLMProperty) {
@@ -739,10 +748,10 @@ internal class ObjectUtil {
         }
     }
 
-    internal class func getSwiftProperties(_ object: RLMObjectBase) -> [RLMProperty] {
+    internal class func getSwiftProperties(_ cls: RLMObjectBase.Type) -> [RLMProperty] {
         _ = ObjectUtil.runOnce
 
-        let cls = type(of: object)
+        let object = cls.init()
 
         var indexedProperties: Set<String>!
         let columnNames = cls._realmColumnNames()

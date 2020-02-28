@@ -32,8 +32,8 @@ class ObjectWithPrivateOptionals: Object {
 }
 
 class ObjectCreationTests: TestCase {
+    // MARK: - Init tests
 
-    // MARK: Init tests
     func testInitWithDefaults() {
         // test all properties are defaults
         let object = SwiftObject()
@@ -171,7 +171,7 @@ class ObjectCreationTests: TestCase {
         _ = SwiftObjcArbitrarilyRenamedObject()
     }
 
-    // MARK: Creation tests
+    // MARK: - Creation tests
 
     func testCreateWithDefaults() {
         let realm = try! Realm()
@@ -738,10 +738,45 @@ class ObjectCreationTests: TestCase {
         }
     }
 
+    func testDynamicCreateEmbeddedDirectly() {
+        let realm = try! Realm()
+        realm.beginWrite()
+        assertThrows(realm.dynamicCreate("EmbeddedTreeObject", value: []),
+                     reasonMatching: "Embedded objects cannot be created directly")
+        realm.cancelWrite()
+    }
+
+    func testCreateEmbeddedWithDictionary() {
+        let realm = try! Realm()
+        realm.beginWrite()
+        let parent = realm.create(EmbeddedParentObject.self, value: [
+            "object": ["value": 5, "child": ["value": 6], "children": [[7], [8]]],
+            "array": [[9], [10]]
+        ])
+        XCTAssertEqual(parent.object!.value, 5)
+        XCTAssertEqual(parent.object!.child!.value, 6)
+        XCTAssertEqual(parent.object!.children.count, 2)
+        XCTAssertEqual(parent.object!.children[0].value, 7)
+        XCTAssertEqual(parent.object!.children[1].value, 8)
+        XCTAssertEqual(parent.array.count, 2)
+        XCTAssertEqual(parent.array[0].value, 9)
+        XCTAssertEqual(parent.array[1].value, 10)
+        realm.cancelWrite()
+    }
+
+    func testCreateEmbeddedWithUnmanagedObjects() {
+    }
+
+    func testCreateEmbeddedManagedObjects() {
+    }
+
+    func testCreateEmbeddedManagedObjectsFromDifferentRealm() {
+    }
+
     // test null object
     // test null list
 
-    // MARK: Add tests
+    // MARK: - Add tests
     func testAddWithExisingNestedObjects() {
         try! Realm().beginWrite()
         let existingObject = try! Realm().create(SwiftBoolObject.self)
@@ -1014,7 +1049,7 @@ class ObjectCreationTests: TestCase {
         }
     }
 
-    // MARK: Private utilities
+    // MARK: - Private utilities
     private func verifySwiftObjectWithArrayLiteral(_ object: SwiftObject, array: [Any], boolObjectValue: Bool,
                                                    boolObjectListValues: [Bool]) {
         XCTAssertEqual(object.boolCol, (array[0] as! Bool))

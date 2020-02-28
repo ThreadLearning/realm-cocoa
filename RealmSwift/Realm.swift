@@ -533,6 +533,9 @@ public struct Realm {
     public func delete(_ object: Object) {
         RLMDeleteObjectFromRealm(object, rlmRealm)
     }
+    public func delete(_ object: EmbeddedObject) {
+        RLMDeleteObjectFromRealm(object, rlmRealm)
+    }
 
     /**
      Deletes zero or more objects from the Realm.
@@ -554,6 +557,11 @@ public struct Realm {
             delete(obj)
         }
     }
+    public func delete<S: Sequence>(_ objects: S) where S.Iterator.Element: EmbeddedObject {
+        for obj in objects {
+            delete(obj)
+        }
+    }
 
     /**
      Deletes zero or more objects from the Realm.
@@ -567,6 +575,9 @@ public struct Realm {
     public func delete<Element: Object>(_ objects: List<Element>) {
         rlmRealm.deleteObjects(objects._rlmArray)
     }
+    public func delete<Element: EmbeddedObject>(_ objects: List<Element>) {
+        rlmRealm.deleteObjects(objects._rlmArray)
+    }
 
     /**
      Deletes zero or more objects from the Realm.
@@ -578,6 +589,9 @@ public struct Realm {
      :nodoc:
      */
     public func delete<Element: Object>(_ objects: Results<Element>) {
+        rlmRealm.deleteObjects(objects.rlmResults)
+    }
+    public func delete<Element: EmbeddedObject>(_ objects: Results<Element>) {
         rlmRealm.deleteObjects(objects.rlmResults)
     }
 
@@ -781,6 +795,9 @@ public struct Realm {
      `Realm.Configuration.maximumNumberOfActiveVersions` for more information.
      */
     public func freeze<T: Object>(_ obj: T) -> T {
+        return RLMObjectFreeze(obj) as! T
+    }
+    public func freeze<T: EmbeddedObject>(_ obj: T) -> T {
         return RLMObjectFreeze(obj) as! T
     }
 

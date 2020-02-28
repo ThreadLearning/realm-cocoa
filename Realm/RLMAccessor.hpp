@@ -27,6 +27,7 @@
 @class RLMRealm;
 class RLMClassInfo;
 class RLMObservationInfo;
+typedef NS_ENUM(NSUInteger, RLMUpdatePolicy);
 
 // realm::util::Optional<id> doesn't work because Objective-C types can't
 // be members of unions with ARC, so this covers the subset of Optional that we
@@ -41,7 +42,7 @@ struct RLMOptionalId {
 class RLMAccessorContext {
 public:
     // Accessor context interface
-    RLMAccessorContext(RLMAccessorContext& parent, realm::Property const& property);
+    RLMAccessorContext(RLMAccessorContext& parent, realm::Obj const& parent_obj, realm::Property const& property);
 
     id box(realm::List&&);
     id box(realm::Results&&);
@@ -87,7 +88,7 @@ public:
     template<typename T>
     T unbox(id v, realm::CreatePolicy = realm::CreatePolicy::Skip, realm::ObjKey = {});
 
-    id unbox_embedded(id v, realm::CreatePolicy = realm::CreatePolicy::Skip, realm::Obj = {}, realm::ColKey = {}, size_t = 0);
+    realm::Obj create_embedded_object();
 
     bool is_null(id v) { return v == NSNull.null; }
     id null_value() { return NSNull.null; }
@@ -109,9 +110,11 @@ private:
     RLMClassInfo& _info;
     // If true, promote unmanaged RLMObjects passed to box() with create=true
     // rather than copying them
-    bool _promote_existing = true;
-    // Parent object of the thing currently being processed, for KVO purposes
-    __unsafe_unretained RLMObjectBase *const _parentObject = nil;
+    bool _promoteExisting = true;
+
+    realm::Obj _parentObject;
+    RLMClassInfo* _parentObjectInfo = nullptr;
+    realm::ColKey _colKey;
 
     // Cached default values dictionary to avoid having to call the class method
     // for every property
@@ -122,4 +125,5 @@ private:
 
     id defaultValue(NSString *key);
     id propertyValue(id obj, size_t propIndex, __unsafe_unretained RLMProperty *const prop);
+    realm::Obj createObject(id value, RLMUpdatePolicy policy);
 };

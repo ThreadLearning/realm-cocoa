@@ -78,6 +78,9 @@
 }
 @end
 
+@implementation EmbeddedIntObject
+@end
+
 #pragma mark AllTypesObject
 
 @implementation AllTypesObject
@@ -405,6 +408,10 @@
 #pragma mark FakeObject
 
 @implementation FakeObject
++ (bool)_realmIgnoreClass { return true; }
+@end
+
+@implementation FakeEmbeddedObject
 + (bool)_realmIgnoreClass { return true; }
 @end
 
